@@ -6,13 +6,13 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import matplotlib.gridspec as gridspec
 from matplotlib.dates import date2num
-from matplotlib.finance import candlestick_ohlc as candlestick
+from mpl_finance import candlestick_ohlc as candlestick
 import datetime
 
 ticker = 'OPK'
 
 # Download sample data
-sec_id = data.get_data_google(ticker, '2014-06-01')
+sec_id = data.get_data_yahoo(ticker, '2014-06-01')
 
 # Data for matplotlib finance plot
 sec_id_ochl = np.array(pd.DataFrame({'0':date2num(sec_id.index.to_pydatetime()),
@@ -36,12 +36,12 @@ Y_AXIS_SIZE = 12
 
 analysis = pd.DataFrame(index = sec_id.index)
 
-analysis['sma_f'] = pd.rolling_mean(sec_id.Close, SMA_FAST)
-analysis['sma_s'] = pd.rolling_mean(sec_id.Close, SMA_SLOW)
-analysis['rsi'] = ta.RSI(sec_id.Close.as_matrix(), RSI_PERIOD)
-analysis['sma_r'] = pd.rolling_mean(analysis.rsi, RSI_AVG_PERIOD) # check shift
-analysis['macd'], analysis['macdSignal'], analysis['macdHist'] = ta.MACD(sec_id.Close.as_matrix(), fastperiod=MACD_FAST, slowperiod=MACD_SLOW, signalperiod=MACD_SIGNAL)
-analysis['stoch_k'], analysis['stoch_d'] = ta.STOCH(sec_id.High.as_matrix(), sec_id.Low.as_matrix(), sec_id.Close.as_matrix(), slowk_period=STOCH_K, slowd_period=STOCH_D)
+analysis['sma_f'] = sec_id.Close.rolling(SMA_FAST).mean()
+analysis['sma_s'] = sec_id.Close.rolling(SMA_SLOW).mean()
+analysis['rsi'] = ta.RSI(sec_id.Close.values, RSI_PERIOD)
+analysis['sma_r'] = analysis.rsi.rolling(RSI_AVG_PERIOD).mean() # check shift
+analysis['macd'], analysis['macdSignal'], analysis['macdHist'] = ta.MACD(sec_id.Close.values, fastperiod=MACD_FAST, slowperiod=MACD_SLOW, signalperiod=MACD_SIGNAL)
+analysis['stoch_k'], analysis['stoch_d'] = ta.STOCH(sec_id.High.values, sec_id.Low.values, sec_id.Close.values, slowk_period=STOCH_K, slowd_period=STOCH_D)
 
 analysis['sma'] = np.where(analysis.sma_f > analysis.sma_s, 1, 0)
 analysis['macd_test'] = np.where((analysis.macd > analysis.macdSignal), 1, 0)
